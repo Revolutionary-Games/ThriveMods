@@ -1,0 +1,78 @@
+# Godot files
+.import
+builds
+
+# Godot-Mono-specific ignores
+.mono/
+/mono_crash.*
+
+*.old
+
+# Merge tool left over files
+*.orig
+
+# Standard stuff
+Thumbs.db
+*.obj
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.sln.docstates
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+[Tt]est[Rr]esult*
+*.vssscc
+$tf*/
+[Bb]in
+[Dd]ebug*/
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+
+# Vim swap files
+*.swp
+
+# Temporary/backup files
+*~
+
+/.idea/
+.import/*
