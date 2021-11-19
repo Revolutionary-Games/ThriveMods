@@ -1,0 +1,11 @@
+<Project Sdk="Godot.NET.Sdk/3.3.0">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>DamageNumbers</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Thrive, Version=0.5.6.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\Thrive\.mono\temp\bin\ExportRelease\Thrive.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

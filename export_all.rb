@@ -14,6 +14,10 @@ def check_command_status
   exit 2
 end
 
+def exported_dll_path(project_name)
+  ".mono/temp/bin/ExportRelease/#{project_name}.dll"
+end
+
 def export_project(folder, target, output)
   puts "Exporting mod #{folder}"
   Dir.chdir(folder) do
@@ -29,7 +33,7 @@ def make_mod_folder(mod_name, pck, extra)
 
   FileUtils.mkdir_p target_path
 
-  FileUtils.cp File.join(mod_name, pck), target_path
+  FileUtils.cp File.join(mod_name, pck), target_path unless pck.nil?
 
   extra.each do |extra_file|
     if extra_file.is_a? Array
@@ -48,8 +52,18 @@ def process_disco_nucleus
   puts 'DiscoNucleus exported'
 end
 
+def process_damage_numbers
+  export_project 'DamageNumbers', 'Linux/X11', 'builds/DamageNumbers.x86_64'
+  make_mod_folder 'DamageNumbers', nil,
+                  ['thrive_mod.json', 'damage_numbers_icon.png',
+                   exported_dll_path('Damage Numbers')]
+
+  puts 'DamageNumbers exported'
+end
+
 def process_all
   process_disco_nucleus
+  process_damage_numbers
 end
 
 FileUtils.mkdir_p 'builds'
