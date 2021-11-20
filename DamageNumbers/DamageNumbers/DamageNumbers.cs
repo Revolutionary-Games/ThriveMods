@@ -7,6 +7,8 @@ public class DamageNumbers : IMod
 {
     private FloatingDamageNumbers damageNumbers;
 
+    private IModInterface storedInterface;
+
     /// <summary>
     ///   Called when the mod is being loaded
     /// </summary>
@@ -19,7 +21,14 @@ public class DamageNumbers : IMod
     {
         GD.Print("DamageNumbers mod is initializing");
 
+        // Store the mod interface for use later
+        storedInterface = modInterface;
+
+        // Setup our GUI control
         damageNumbers = new FloatingDamageNumbers();
+
+        // Subscribe to the events we are interested in
+        modInterface.OnDamageReceived += OnDamageReceived;
 
         // Success
         return true;
@@ -33,6 +42,17 @@ public class DamageNumbers : IMod
     {
         GD.Print("DamageNumbers mod is unloading");
 
+        // Remember to unsubscribe from all the events we subscribed to in Initialize,
+        // otherwise mod unloading won't work correctly
+        storedInterface.OnDamageReceived -= OnDamageReceived;
+
+        // And release our mod interface reference
+        storedInterface = null;
+
+        // Release our other resources we created
+        damageNumbers.QueueFree();
+        damageNumbers = null;
+
         // Success
         return true;
     }
@@ -40,11 +60,25 @@ public class DamageNumbers : IMod
     /// <summary>
     ///   Called once initial node setup has finished and it is possible to add children to the root node
     /// </summary>
-    /// <param name="currentScene">The scene we want to attach to, could also get these from the mod interface</param>
+    /// <param name="currentScene">
+    ///   The scene we want might want to attach to, could also get these from the mod interface
+    /// </param>
+    /// <remarks>
+    ///   <para>
+    ///     As this mod wants to be always active we directly attach to the scene tree root to stay attached even when
+    ///     game scenes are changed.
+    ///   </para>
+    /// </remarks>
     public void CanAttachNodes(Node currentScene)
     {
         GD.Print("DamageNumbers mod is attaching nodes");
 
-        currentScene.GetParent().AddChild(damageNumbers);
+        currentScene.GetTree().Root.AddChild(damageNumbers);
+    }
+
+    private void OnDamageReceived(Node damageReceiver, float amount, bool isPlayer)
+    {
+        if (damageReceiver is Spatial spatial)
+            damageNumbers.AddNumber(amount, spatial.GlobalTransform.origin);
     }
 }
