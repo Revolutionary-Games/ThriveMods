@@ -1,5 +1,6 @@
 {
     "Name": "Damage Numbers",
+    "InternalName": "DamageNumbers",
     "Author": "Revolutionary Games Studio",
     "Version": "1.0",
     "Description": "Adds floating damage numbers when dealing damage",

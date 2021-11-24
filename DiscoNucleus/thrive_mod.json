@@ -1,5 +1,6 @@
 {
     "Name": "Disco Nucleus",
+    "InternalName": "DiscoNucleus",
     "Author": "Revolutionary Games Studio",
     "Version": "1.0",
     "Description": "Example mod showing asset overriding",
