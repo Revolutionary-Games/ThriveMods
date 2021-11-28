@@ -45,7 +45,7 @@ public class FloatingDamageNumbers : Control
     {
         // When cameras are detached from the main scene they don't have Current set to false even if
         // they aren't active
-        if (camera == null || (!camera.Current || !camera.IsInsideTree()))
+        if (camera == null || !IsInstanceValid(camera) || (!camera.Current || !camera.IsInsideTree()))
         {
             TryGetCamera();
 
