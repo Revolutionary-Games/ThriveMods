@@ -2,7 +2,7 @@
     "Name": "Damage Numbers",
     "InternalName": "DamageNumbers",
     "Author": "Revolutionary Games Studio",
-    "Version": "1.0",
+    "Version": "1.1",
     "Description": "Adds floating damage numbers when dealing damage",
     "LongDescription": "",
     "Icon": "damage_numbers_icon.png",
