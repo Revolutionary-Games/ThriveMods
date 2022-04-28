@@ -3,7 +3,7 @@ using HarmonyLib;
 
 public class RandomPartChallenge : IMod
 {
-    private const string OurHarmonyId = "com.revolutionarygamesstudio.thrive.randomPartChallenge";
+    private const string OurHarmonyId = "com.revolutionarygamesstudio.thrive.mod.randomPartChallenge";
 
     private Harmony? harmony;
 
