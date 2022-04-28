@@ -7,7 +7,7 @@ require 'fileutils'
 # This script exports all the mods and prepares distributable mod folders in "builds"
 # folder
 
-DOTNET_RUNTIME_VERSION = 'netstandard2.0'
+DOTNET_RUNTIME_VERSION = 'net472'
 
 def check_command_status
   return if $CHILD_STATUS.exitstatus.zero?
