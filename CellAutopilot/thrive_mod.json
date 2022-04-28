@@ -1,0 +1,16 @@
+{
+    "Name": "Cell Autopilot",
+    "InternalName": "CellAutopilot",
+    "Author": "Revolutionary Games Studio",
+    "Version": "1.0",
+    "Description": "Let the AI take control of your player cell",
+    "LongDescription": "",
+    "Icon": "cell_autopilot_icon.png",
+    "InfoUrl": "https://github.com/Revolutionary-Games/ThriveMods",
+    "License": "MIT+CC-SA-3.0",
+    "RecommendedThriveVersion": "0.5.8.1",
+    "MinimumThriveVersion": "0.5.8.1-alpha",
+    "MaximumThriveVersion": "",
+    "ModAssembly": "CellAutopilot.dll",
+    "UseAutoHarmony": true
+}

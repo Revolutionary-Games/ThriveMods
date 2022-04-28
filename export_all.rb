@@ -7,6 +7,8 @@ require 'fileutils'
 # This script exports all the mods and prepares distributable mod folders in "builds"
 # folder
 
+DOTNET_RUNTIME_VERSION = 'netstandard2.0'
+
 def check_command_status
   return if $CHILD_STATUS.exitstatus.zero?
 
@@ -18,10 +20,22 @@ def exported_dll_path(project_name)
   ".mono/temp/bin/ExportRelease/#{project_name}.dll"
 end
 
+def dotnet_built_dll_path(project_name)
+  "#{project_name}/bin/Release/#{DOTNET_RUNTIME_VERSION}/#{project_name}.dll"
+end
+
 def export_project(folder, target, output)
   puts "Exporting mod #{folder}"
   Dir.chdir(folder) do
-    system 'godot', '--export', target, output
+    system 'godot', '--no-window', '--export', target, output
+    check_command_status
+  end
+end
+
+def build_with_dotnet(folder, target)
+  puts "Running dotnet build for #{folder}"
+  Dir.chdir(folder) do
+    system 'dotnet', 'build', '-c', target, '/t:Clean,Build'
     check_command_status
   end
 end
@@ -61,9 +75,29 @@ def process_damage_numbers
   puts 'DamageNumbers exported'
 end
 
+def process_random_parts
+  export_project 'RandomPartChallenge', 'Linux/X11', 'builds/RandomPartChallenge.x86_64'
+  make_mod_folder 'RandomPartChallenge', nil,
+                  ['thrive_mod.json', 'random_parts_icon.png',
+                   exported_dll_path('RandomPartChallenge')]
+
+  puts 'RandomPartChallenge exported'
+end
+
+def process_cell_autopilot
+  build_with_dotnet 'CellAutopilot', 'Release'
+  make_mod_folder 'CellAutopilot', nil,
+                  ['thrive_mod.json', 'cell_autopilot_icon.png',
+                   dotnet_built_dll_path('CellAutopilot')]
+
+  puts 'CellAutopilot exported'
+end
+
 def process_all
   process_disco_nucleus
   process_damage_numbers
+  process_random_parts
+  process_cell_autopilot
 end
 
 FileUtils.mkdir_p 'builds'

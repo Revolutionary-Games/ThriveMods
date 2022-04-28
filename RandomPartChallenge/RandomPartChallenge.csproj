@@ -1,0 +1,15 @@
+<Project Sdk="Godot.NET.Sdk/3.3.0">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>8</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Thrive">
+      <HintPath>..\..\Thrive\.mono\temp\bin\ExportRelease\Thrive.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Lib.Harmony" Version="2.2.1" />
+  </ItemGroup>
+</Project>

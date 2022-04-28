@@ -1,0 +1,16 @@
+{
+    "Name": "Random Part Challenge",
+    "InternalName": "RandomPartChallenge",
+    "Author": "Revolutionary Games Studio",
+    "Version": "1.0",
+    "Description": "Let random chance control which parts you get each editor cycle. Can you still Thrive?",
+    "LongDescription": "",
+    "Icon": "random_parts_icon.png",
+    "InfoUrl": "https://github.com/Revolutionary-Games/ThriveMods",
+    "License": "MIT+CC-SA-3.0",
+    "RecommendedThriveVersion": "0.5.8.1",
+    "MinimumThriveVersion": "0.5.8.1-alpha",
+    "MaximumThriveVersion": "",
+    "ModAssembly": "RandomPartChallenge.dll",
+    "AssemblyModClass": "RandomPartChallenge"
+}

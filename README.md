@@ -8,6 +8,8 @@ We don't currently accept community mods into this repo, you need to put them el
 
 - [Disco Nucleus](DiscoNucleus/): shows how to replace an existing asset in Thrive
 - [Damage Numbers](DamageNumbers/): example mod for using C# in a mod
+- [Random Part Challenge](RandomPartChallenge/): example mod for using Harmony manually in a C#
+- [Cell Autopilot](CellAutopilot/): example mod for using Harmony in a C# standalone mod not using Godot at all
 
 
 ## Exporting
@@ -19,9 +21,11 @@ are referenced.
 
 There's a helper script provided (`export_all.rb`) that exports and
 prepares folders for all mods in this repository. For how to get the
-script working, please refer to
-[Thrive setup instructions](https://github.com/Revolutionary-Games/Thrive/blob/master/doc/setup_instructions.md)
-If you prefer you can also manually use Godot editor to export specific mods.
+script working, please refer to [Thrive setup
+instructions](https://github.com/Revolutionary-Games/Thrive/blob/master/doc/setup_instructions.md)
+If you prefer you can also manually use Godot editor to export
+specific mods. Some mods are C# only and just need C# build tools
+without depending on Godot.
 
 
 ## Referencing Thrive

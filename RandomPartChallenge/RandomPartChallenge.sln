@@ -1,0 +1,19 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomPartChallenge", "RandomPartChallenge.csproj", "{FBD68060-A538-4860-94F8-943D8FB5945E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+	Debug|Any CPU = Debug|Any CPU
+	ExportDebug|Any CPU = ExportDebug|Any CPU
+	ExportRelease|Any CPU = ExportRelease|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBD68060-A538-4860-94F8-943D8FB5945E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBD68060-A538-4860-94F8-943D8FB5945E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBD68060-A538-4860-94F8-943D8FB5945E}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{FBD68060-A538-4860-94F8-943D8FB5945E}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{FBD68060-A538-4860-94F8-943D8FB5945E}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{FBD68060-A538-4860-94F8-943D8FB5945E}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+	EndGlobalSection
+EndGlobal
