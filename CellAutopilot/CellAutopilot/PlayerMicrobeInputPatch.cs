@@ -37,7 +37,8 @@ namespace CellAutopilot
                 .Where(method =>
                     HasKeyRunAttribute(method) &&
                     !method.Name.StartsWith(nameof(PlayerMicrobeInput.ToggleAutoMove)) &&
-                    !method.Name.StartsWith(nameof(PlayerMicrobeInput.ShowSignalingCommandsMenu)));
+                    !method.Name.StartsWith(nameof(PlayerMicrobeInput.ShowSignalingCommandsMenu)) &&
+                    !method.Name.StartsWith(nameof(PlayerMicrobeInput.CloseSignalingCommandsMenu)));
         }
 
         private static bool Prefix()
