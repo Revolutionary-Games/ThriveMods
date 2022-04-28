@@ -31,4 +31,4 @@ engine ever changes how their build output is structured this also
 needs changing. The base path is:
 `.mono\temp\bin\ExportRelease\Thrive.dll`
 
-Note: Windows path separator used as that's what's in a `.csproj` files
+Note: Windows path separator used as that's what's in `.csproj` files.
