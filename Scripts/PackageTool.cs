@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace Scripts;
 
 using System;
@@ -13,6 +15,15 @@ using SharedBase.Utilities;
 
 public class PackageTool : PackageToolBase<Program.PackageOptions>
 {
+    /// <summary>
+    ///   Needs to match what Godot uses
+    /// </summary>
+    private const string DOTNET_RUNTIME_VERSION = "net472";
+
+    private const string DOTNET_BUILD_MODE = "Release";
+
+    private const string MOD_INFO_FILE = "thrive_mod.json";
+
     private static readonly IReadOnlyList<PackagePlatform> ModPlatforms = new List<PackagePlatform>
     {
         PackagePlatform.Linux,
@@ -84,6 +95,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             ColourConsole.WriteSuccessLine($"Successfully packaged {mod}");
         }
 
+        ColourConsole.WriteNormalLine($"Packaged: {string.Join(", ", options.Mods)}");
         ColourConsole.WriteSuccessLine($"Mods have been packaged into: {ResultZip}");
         return true;
     }
@@ -112,31 +124,41 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
     protected override async Task<bool> Export(PackagePlatform platform, string folder,
         CancellationToken cancellationToken)
     {
-        var target = GodotTargetFromPlatform(platform);
-
-        ColourConsole.WriteDebugLine($"Using Godot target {target}");
-
         Directory.CreateDirectory(folder);
 
         ColourConsole.WriteNormalLine($"Exporting a mod to folder: {folder}");
 
-        var targetFile = Path.Join(folder, currentlyProcessedMod + GodotTargetExtension(platform));
-
-        var startInfo = new ProcessStartInfo("godot");
-        startInfo.ArgumentList.Add("--no-window");
-        startInfo.ArgumentList.Add("--export");
-        startInfo.ArgumentList.Add(target);
-        startInfo.ArgumentList.Add(targetFile);
-
-        var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
-
-        if (result.ExitCode != 0)
+        switch (currentlyProcessedMod)
         {
-            ColourConsole.WriteWarningLine("Exporting with Godot failed");
-            return false;
+            case OfficialMod.CellAutopilot:
+                if (!await ExportWithDotnet(platform, folder, cancellationToken))
+                    return false;
+
+                break;
+            case OfficialMod.DamageNumbers:
+            case OfficialMod.DiscoNucleus:
+            case OfficialMod.RandomPartChallenge:
+            {
+                if (!await ExportWithGodot(platform, folder, currentlyProcessedMod != OfficialMod.DiscoNucleus,
+                        cancellationToken))
+                {
+                    return false;
+                }
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        ColourConsole.WriteSuccessLine("Godot export succeeded");
+        foreach (var file in GetFilesToPackageForMod())
+        {
+            if (!file.IsForPlatform(platform))
+                continue;
+
+            File.Copy(file.OriginalFile, Path.Join(folder, file.PackagePathAndName), true);
+        }
+
         return true;
     }
 
@@ -192,6 +214,125 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
                 return string.Empty;
             default:
                 throw new ArgumentOutOfRangeException(nameof(platform), platform, null);
+        }
+    }
+
+    private string ExportedDllPath()
+    {
+        return $"{currentlyProcessedMod}/.mono/temp/bin/ExportRelease/{currentlyProcessedMod}.dll";
+    }
+
+    private string DotnetBuiltDllPath()
+    {
+        return $"{currentlyProcessedMod}/bin/Release/{DOTNET_RUNTIME_VERSION}/{currentlyProcessedMod}.dll";
+    }
+
+    private async Task<bool> ExportWithGodot(PackagePlatform platform, string folder, bool copyDll,
+        CancellationToken cancellationToken)
+    {
+        var target = GodotTargetFromPlatform(platform);
+
+        ColourConsole.WriteDebugLine($"Using Godot target {target}");
+
+        var tempFolder = folder + ".temp";
+
+        if (Directory.Exists(tempFolder))
+            Directory.Delete(tempFolder, true);
+
+        var targetFile = Path.Join(tempFolder, currentlyProcessedMod + GodotTargetExtension(platform));
+
+        var startInfo = new ProcessStartInfo("godot");
+        startInfo.ArgumentList.Add("--no-window");
+        startInfo.ArgumentList.Add("--export");
+        startInfo.ArgumentList.Add(target);
+        startInfo.ArgumentList.Add(targetFile);
+
+        var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
+
+        if (result.ExitCode != 0)
+        {
+            ColourConsole.WriteWarningLine("Exporting with Godot failed");
+            return false;
+        }
+
+        if (copyDll)
+        {
+            CopyHelpers.CopyToFolder(ExportedDllPath(), folder);
+        }
+
+        foreach (var file in GetFilesToCopyInGodotPackage())
+        {
+            File.Copy(Path.Join(tempFolder, file), Path.Join(folder, file));
+        }
+
+        Directory.Delete(tempFolder, true);
+        ColourConsole.WriteSuccessLine("Godot export succeeded");
+        return true;
+    }
+
+    private async Task<bool> ExportWithDotnet(PackagePlatform platform, string folder,
+        CancellationToken cancellationToken)
+    {
+        ColourConsole.WriteNormalLine("Exporting with dotnet");
+
+        var startInfo = new ProcessStartInfo("dotnet")
+        {
+            WorkingDirectory = currentlyProcessedMod.ToString(),
+        };
+        startInfo.ArgumentList.Add("build");
+        startInfo.ArgumentList.Add("-c");
+        startInfo.ArgumentList.Add(DOTNET_BUILD_MODE);
+        startInfo.ArgumentList.Add("/t:Clean,Build");
+
+        var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
+
+        if (result.ExitCode != 0)
+        {
+            ColourConsole.WriteWarningLine("Dotnet build failed");
+            return false;
+        }
+
+        CopyHelpers.CopyToFolder(DotnetBuiltDllPath(), folder);
+
+        ColourConsole.WriteSuccessLine("Dotnet build succeeded");
+        return true;
+    }
+
+    private IEnumerable<string> GetFilesToCopyInGodotPackage()
+    {
+        switch (currentlyProcessedMod)
+        {
+            case OfficialMod.CellAutopilot:
+                yield return "DiscoNucleus.pck";
+
+                break;
+        }
+    }
+
+    private IEnumerable<FileToPackage> GetFilesToPackageForMod()
+    {
+        yield return new FileToPackage(Path.Join(currentlyProcessedMod.ToString(), MOD_INFO_FILE), MOD_INFO_FILE);
+
+        switch (currentlyProcessedMod)
+        {
+            case OfficialMod.CellAutopilot:
+                yield return new FileToPackage(Path.Join(currentlyProcessedMod.ToString(), "cell_autopilot_icon.png"));
+
+                break;
+            case OfficialMod.DamageNumbers:
+                yield return new FileToPackage(Path.Join(currentlyProcessedMod.ToString(), "damage_numbers_icon.png"));
+
+                break;
+            case OfficialMod.DiscoNucleus:
+                yield return new FileToPackage(Path.Join(currentlyProcessedMod.ToString(), "disco_icon.png"));
+
+                break;
+            case OfficialMod.RandomPartChallenge:
+                yield return new FileToPackage(Path.Join(currentlyProcessedMod.ToString(), "random_parts_icon.png"));
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 

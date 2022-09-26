@@ -19,8 +19,8 @@ the Thrive repository for code references to work. Also Thrive needs
 to have been exported at least once to generate the library files that
 are referenced.
 
-There's a helper script provided (`dotnet run --project Scripts -- package`) that exports and
-prepares folders for all mods in this repository. For how to get the
+There's a helper script provided (`dotnet run --project Scripts -- package --clean-zip`)
+that exports and prepares folders for all mods in this repository. For how to get the
 script working, please refer to [Thrive setup
 instructions](https://github.com/Revolutionary-Games/Thrive/blob/master/doc/setup_instructions.md)
 If you prefer you can also manually use Godot editor to export
