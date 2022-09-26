@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace Scripts;
 
 using System;
@@ -241,8 +239,6 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         {
             case OfficialMod.DamageNumbers:
                 return "Damage Numbers.dll";
-
-                break;
             default:
                 return $"{currentlyProcessedMod.ToString()}.dll";
         }
