@@ -49,7 +49,7 @@ public class Program
     public class ChangesOptions : ChangesOptionsBase
     {
         [Option('b', "branch", Required = false, Default = "master", HelpText = "The git remote branch name")]
-        public override string RemoteBranch { get; set; } = "master";
+        public override string RemoteBranch { get; set; } = "main";
     }
 
     public class PackageOptions : PackageOptionsBase
