@@ -6,11 +6,13 @@ We don't currently accept community mods into this repo, you need to put them el
 
 ## Example Mods
 
-- [Disco Nucleus](DiscoNucleus/): shows how to replace an existing asset in Thrive
-- [Damage Numbers](DamageNumbers/): example mod for using C# in a mod
-- [Random Part Challenge](RandomPartChallenge/): example mod for using Harmony manually in a C#
-- [Cell Autopilot](CellAutopilot/): example mod for using Harmony in a C# standalone mod not using Godot at all
+- [Disco Nucleus](DiscoNucleus): shows how to replace an existing asset in Thrive
+- [Damage Numbers](DamageNumbers): example mod for using C# in a mod
+- [Random Part Challenge](RandomPartChallenge): example mod for using Harmony manually in a C#
+- [Cell Autopilot](CellAutopilot): example mod for using Harmony in a C# standalone mod not using Godot at all
 
+Note that the top level solution (`.sln`) file doesn't reference the code mods as they don't
+want to compile that way.
 
 ## Exporting
 

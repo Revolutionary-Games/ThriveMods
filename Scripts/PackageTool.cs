@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Collections;
 
 namespace Scripts;
 
@@ -35,8 +35,9 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         new("LICENSE"),
     };
 
+    private readonly List<string> dummyFiles = new();
+
     private OfficialMod currentlyProcessedMod;
-    private bool dynamicGenerated;
 
     public PackageTool(Program.PackageOptions options) : base(options)
     {
@@ -78,6 +79,15 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             File.Delete(ResultZip);
         }
 
+        await CreateDynamicallyGeneratedFiles(cancellationToken);
+
+        // Add the license files first to the zip (this makes the -u flag running commands later not complain)
+        if (!await CreateBaseZipStructure(cancellationToken))
+        {
+            ColourConsole.WriteErrorLine("Initial zip creation failed. Is the 'zip' command available in PATH?");
+            return false;
+        }
+
         foreach (var mod in options.Mods)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -88,7 +98,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
 
             if (!await base.Run(cancellationToken))
             {
-                ColourConsole.WriteErrorLine("Packaging mod failed");
+                ColourConsole.WriteErrorLine($"Packaging mod {mod} failed");
                 return false;
             }
 
@@ -97,17 +107,6 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
 
         ColourConsole.WriteNormalLine($"Packaged: {string.Join(", ", options.Mods)}");
         ColourConsole.WriteSuccessLine($"Mods have been packaged into: {ResultZip}");
-        return true;
-    }
-
-    protected override async Task<bool> OnBeforeStartExport(CancellationToken cancellationToken)
-    {
-        if (dynamicGenerated)
-            return true;
-
-        await CreateDynamicallyGeneratedFiles(cancellationToken);
-
-        dynamicGenerated = true;
         return true;
     }
 
@@ -131,7 +130,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         switch (currentlyProcessedMod)
         {
             case OfficialMod.CellAutopilot:
-                if (!await ExportWithDotnet(platform, folder, cancellationToken))
+                if (!await ExportWithDotnet(folder, cancellationToken))
                     return false;
 
                 break;
@@ -139,8 +138,8 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             case OfficialMod.DiscoNucleus:
             case OfficialMod.RandomPartChallenge:
             {
-                if (!await ExportWithGodot(platform, folder, currentlyProcessedMod != OfficialMod.DiscoNucleus,
-                        cancellationToken))
+                if (!await ExportWithGodot(platform, currentlyProcessedMod.ToString(), folder,
+                        currentlyProcessedMod != OfficialMod.DiscoNucleus, cancellationToken))
                 {
                     return false;
                 }
@@ -174,8 +173,8 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             WorkingDirectory = options.OutputFolder,
         };
         startInfo.ArgumentList.Add("-9");
-        startInfo.ArgumentList.Add("-u");
-        startInfo.ArgumentList.Add(Path.GetFullPath(ResultZip));
+        startInfo.ArgumentList.Add("-ru");
+        startInfo.ArgumentList.Add(Path.GetFileName(ResultZip));
         startInfo.ArgumentList.Add(Path.GetFileName(folder));
 
         var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
@@ -186,12 +185,31 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             return false;
         }
 
+        // A bit of a hack that we create a dummy file here...
+        await File.WriteAllBytesAsync(archiveFile, new byte[] { 42 }, cancellationToken);
+        dummyFiles.Add(archiveFile);
+
+        return true;
+    }
+
+    protected override async Task<bool> OnAfterExport(CancellationToken cancellationToken)
+    {
+        await base.OnAfterExport(cancellationToken);
+
+        // Remove the dummy file created by Compress
+        foreach (var dummyFile in dummyFiles)
+        {
+            File.Delete(dummyFile);
+        }
+
+        dummyFiles.Clear();
+
         return true;
     }
 
     protected override IEnumerable<FileToPackage> GetFilesToPackage()
     {
-        return LicenseFiles;
+        return GetFilesToPackageForMod();
     }
 
     private string GodotTargetFromPlatform(PackagePlatform platform)
@@ -217,35 +235,54 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         }
     }
 
+    private string DllNameForMod()
+    {
+        switch (currentlyProcessedMod)
+        {
+            case OfficialMod.DamageNumbers:
+                return "Damage Numbers.dll";
+
+                break;
+            default:
+                return $"{currentlyProcessedMod.ToString()}.dll";
+        }
+    }
+
     private string ExportedDllPath()
     {
-        return $"{currentlyProcessedMod}/.mono/temp/bin/ExportRelease/{currentlyProcessedMod}.dll";
+        return $"{currentlyProcessedMod}/.mono/temp/bin/ExportRelease/{DllNameForMod()}";
     }
 
     private string DotnetBuiltDllPath()
     {
-        return $"{currentlyProcessedMod}/bin/Release/{DOTNET_RUNTIME_VERSION}/{currentlyProcessedMod}.dll";
+        var mod = currentlyProcessedMod;
+        return $"{mod}/{mod}/bin/Release/{DOTNET_RUNTIME_VERSION}/{DllNameForMod()}";
     }
 
-    private async Task<bool> ExportWithGodot(PackagePlatform platform, string folder, bool copyDll,
-        CancellationToken cancellationToken)
+    private async Task<bool> ExportWithGodot(PackagePlatform platform, string sourceFolder, string targetFolder,
+        bool copyDll, CancellationToken cancellationToken)
     {
         var target = GodotTargetFromPlatform(platform);
 
         ColourConsole.WriteDebugLine($"Using Godot target {target}");
 
-        var tempFolder = folder + ".temp";
+        var tempFolder = targetFolder + ".temp";
 
         if (Directory.Exists(tempFolder))
             Directory.Delete(tempFolder, true);
 
+        Directory.CreateDirectory(tempFolder);
+
         var targetFile = Path.Join(tempFolder, currentlyProcessedMod + GodotTargetExtension(platform));
 
-        var startInfo = new ProcessStartInfo("godot");
+        var startInfo = new ProcessStartInfo("godot")
+        {
+            WorkingDirectory = sourceFolder,
+        };
         startInfo.ArgumentList.Add("--no-window");
         startInfo.ArgumentList.Add("--export");
         startInfo.ArgumentList.Add(target);
-        startInfo.ArgumentList.Add(targetFile);
+        startInfo.ArgumentList.Add(Path.GetFullPath(targetFile));
 
         var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
 
@@ -257,12 +294,12 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
 
         if (copyDll)
         {
-            CopyHelpers.CopyToFolder(ExportedDllPath(), folder);
+            CopyHelpers.CopyToFolder(ExportedDllPath(), targetFolder);
         }
 
         foreach (var file in GetFilesToCopyInGodotPackage())
         {
-            File.Copy(Path.Join(tempFolder, file), Path.Join(folder, file));
+            File.Copy(Path.Join(tempFolder, file), Path.Join(targetFolder, file), true);
         }
 
         Directory.Delete(tempFolder, true);
@@ -270,8 +307,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         return true;
     }
 
-    private async Task<bool> ExportWithDotnet(PackagePlatform platform, string folder,
-        CancellationToken cancellationToken)
+    private async Task<bool> ExportWithDotnet(string folder, CancellationToken cancellationToken)
     {
         ColourConsole.WriteNormalLine("Exporting with dotnet");
 
@@ -302,7 +338,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
     {
         switch (currentlyProcessedMod)
         {
-            case OfficialMod.CellAutopilot:
+            case OfficialMod.DiscoNucleus:
                 yield return "DiscoNucleus.pck";
 
                 break;
@@ -334,6 +370,46 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    private async Task<bool> CreateBaseZipStructure(CancellationToken cancellationToken)
+    {
+        ColourConsole.WriteNormalLine($"Creating {ResultZip} with license content");
+
+        // TODO: this could easily use the C# standard zip library for less dependencies
+        var startInfo = new ProcessStartInfo("zip")
+        {
+            CreateNoWindow = true,
+            WorkingDirectory = options.OutputFolder,
+        };
+        startInfo.ArgumentList.Add("-9");
+        startInfo.ArgumentList.Add(Path.GetFileName(ResultZip));
+
+        foreach (var fileToPackage in GetTopLevelFilesToPackage())
+        {
+            File.Copy(fileToPackage.OriginalFile, Path.Join(options.OutputFolder, fileToPackage.PackagePathAndName),
+                true);
+
+            startInfo.ArgumentList.Add(Path.GetFileName(fileToPackage.PackagePathAndName));
+        }
+
+        startInfo.ArgumentList.Add(Path.GetFileName(ReadmeFile));
+        startInfo.ArgumentList.Add(Path.GetFileName(RevisionFile));
+
+        var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
+
+        if (result.ExitCode != 0)
+        {
+            ColourConsole.WriteErrorLine("Running zip command failed");
+            return false;
+        }
+
+        return true;
+    }
+
+    private IEnumerable<FileToPackage> GetTopLevelFilesToPackage()
+    {
+        return LicenseFiles;
     }
 
     private async Task CreateDynamicallyGeneratedFiles(CancellationToken cancellationToken)

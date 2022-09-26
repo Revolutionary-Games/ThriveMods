@@ -11,10 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedBase", "Revolutionary
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CellAutopilot", "CellAutopilot\CellAutopilot\CellAutopilot.csproj", "{C56992BF-56AB-4C69-809C-2005B1E45076}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Damage Numbers", "DamageNumbers\Damage Numbers.csproj", "{6617E93E-97E2-42F2-894A-5D8DB5AB1925}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomPartChallenge", "RandomPartChallenge\RandomPartChallenge.csproj", "{F0AD17CB-63E0-4841-96E9-5BBA54E8F118}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,13 +36,5 @@ Global
 		{C56992BF-56AB-4C69-809C-2005B1E45076}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C56992BF-56AB-4C69-809C-2005B1E45076}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C56992BF-56AB-4C69-809C-2005B1E45076}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6617E93E-97E2-42F2-894A-5D8DB5AB1925}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6617E93E-97E2-42F2-894A-5D8DB5AB1925}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6617E93E-97E2-42F2-894A-5D8DB5AB1925}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{6617E93E-97E2-42F2-894A-5D8DB5AB1925}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{F0AD17CB-63E0-4841-96E9-5BBA54E8F118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F0AD17CB-63E0-4841-96E9-5BBA54E8F118}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F0AD17CB-63E0-4841-96E9-5BBA54E8F118}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{F0AD17CB-63E0-4841-96E9-5BBA54E8F118}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal
