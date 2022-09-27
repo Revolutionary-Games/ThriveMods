@@ -9,6 +9,12 @@ internal class RandomPartCellEditorPatch
 {
     private const int MaxDistance = 1000;
 
+    /// <summary>
+    ///   We need to know when we need to prevent further organelle placing as our random organelle add now depends
+    ///   on the organelle placing check passing
+    /// </summary>
+    internal static bool PerformingAutomaticAdd;
+
     private static readonly AccessTools.FieldRef<CellEditorComponent, OrganelleLayout<OrganelleTemplate>>
         EditedOrganellesRef =
             AccessTools.FieldRefAccess<CellEditorComponent, OrganelleLayout<OrganelleTemplate>>(
@@ -37,7 +43,11 @@ internal class RandomPartCellEditorPatch
 
         var rotationsToTry = Enumerable.Range(0, 6).OrderBy(_ => random.Next()).ToList();
 
+        PerformingAutomaticAdd = true;
+
         // Select a random valid organelle type to add
+        // TODO: for easier mode could make the nucleus much less likely or require the resulting stationary ATP
+        // balance to be positive
         foreach (var organelleDefinition in
                  SimulationParameters.Instance.GetAllOrganelles().OrderBy(_ => random.Next()))
         {
@@ -74,9 +84,12 @@ internal class RandomPartCellEditorPatch
                             if (!organelles.CanPlaceAndIsTouching(template))
                                 continue;
 
-                            if (AddOrganelle(__instance, template))
+                            var placed = CreatePlaceActionIfPossible(__instance, template);
+
+                            if (placed != null && EnqueueAction(__instance, new CombinedEditorAction(placed)))
                             {
                                 GD.Print("Hope you like your new random ", organelleDefinition.InternalName);
+                                PerformingAutomaticAdd = false;
                                 return;
                             }
                         }
@@ -86,11 +99,23 @@ internal class RandomPartCellEditorPatch
         }
 
         GD.Print("Could not find a place for a random organelle");
+        PerformingAutomaticAdd = false;
+    }
+
+    // We need to match the nullability of the actual method that is reverse patched
+    // ReSharper disable once ReturnTypeCanBeNotNullable
+    [HarmonyReversePatch]
+    [HarmonyPatch(typeof(CellEditorComponent), "CreatePlaceActionIfPossible", typeof(OrganelleTemplate))]
+    private static CombinedEditorAction? CreatePlaceActionIfPossible(object instance, OrganelleTemplate organelle)
+    {
+        throw new NotImplementedException();
     }
 
     [HarmonyReversePatch]
-    [HarmonyPatch(typeof(CellEditorComponent), "AddOrganelle", typeof(OrganelleTemplate))]
-    private static bool AddOrganelle(object instance, OrganelleTemplate organelle)
+    [HarmonyPatch(
+        typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate>),
+        "EnqueueAction", typeof(CombinedEditorAction))]
+    private static bool EnqueueAction(object instance, CombinedEditorAction action)
     {
         throw new NotImplementedException();
     }
@@ -107,6 +132,12 @@ internal class RandomPartCellEditorDisableThingsPatch
     [HarmonyPatch("IsValidPlacement")]
     private static bool Prefix1(ref bool __result)
     {
+        if (RandomPartCellEditorPatch.PerformingAutomaticAdd)
+        {
+            GD.Print("Allowing normal placement logic to check position");
+            return true;
+        }
+
         __result = false;
         return false;
     }
@@ -119,14 +150,15 @@ internal class RandomPartCellEditorDisableThingsPatch
     }
 
     [HarmonyPrefix]
-    [HarmonyPatch("TryRemoveHexAt")]
-    private static bool Prefix3()
+    [HarmonyPatch("TryCreateRemoveHexAtAction")]
+    private static bool Prefix3(ref EditorAction? __result)
     {
+        __result = null;
         return false;
     }
 }
 
-[HarmonyPatch(typeof(EditorBase<CellEditorAction, MicrobeStage>))]
+[HarmonyPatch(typeof(EditorBase<EditorAction, MicrobeStage>))]
 internal class RandomPartEditorBasePatch
 {
     [HarmonyPrefix]
@@ -144,7 +176,7 @@ internal class RandomPartEditorBasePatch
     }
 }
 
-[HarmonyPatch(typeof(HexEditorComponentBase<ICellEditorData, CellEditorAction, OrganelleTemplate>))]
+[HarmonyPatch(typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate>))]
 internal class RandomPartHexEditorComponentBasePatch
 {
     [HarmonyPrefix]
