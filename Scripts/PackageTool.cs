@@ -77,6 +77,8 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             File.Delete(ResultZip);
         }
 
+        Directory.CreateDirectory(options.OutputFolder);
+
         await CreateDynamicallyGeneratedFiles(cancellationToken);
 
         // Add the license files first to the zip (this makes the -u flag running commands later not complain)
