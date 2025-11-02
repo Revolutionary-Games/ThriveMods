@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://6xd603w3i535"
-path.s3tc="res://.godot/imported/nucleus.png-ce0aeeb4c96966d4358179fc8a32d988.s3tc.ctex"
+uid="uid://bh1e6qrcmeoux"
+path.s3tc="res://.godot/imported/Nucleus.png-73b22ec614750061a15e2f4e5824d976.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/textures/nucleus.png"
-dest_files=["res://.godot/imported/nucleus.png-ce0aeeb4c96966d4358179fc8a32d988.s3tc.ctex"]
+source_file="res://assets/textures/Nucleus.png"
+dest_files=["res://.godot/imported/Nucleus.png-73b22ec614750061a15e2f4e5824d976.s3tc.ctex"]
 
 [params]
 
@@ -22,9 +22,9 @@ compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=2
+compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -38,4 +38,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
