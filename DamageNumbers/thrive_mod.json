@@ -8,8 +8,8 @@
     "Icon": "damage_numbers_icon.png",
     "InfoUrl": "https://github.com/Revolutionary-Games/ThriveMods",
     "License": "MIT",
-    "RecommendedThriveVersion": "0.9.0.0",
-    "MinimumThriveVersion": "0.9.0.0",
+    "RecommendedThriveVersion": "0.9.1.0",
+    "MinimumThriveVersion": "0.9.1.0",
     "MaximumThriveVersion": "",
     "ModAssembly": "Damage Numbers.dll",
     "AssemblyModClass": "DamageNumbers"
