@@ -35,6 +35,6 @@ without depending on Godot.
 The code mods use a relative path to refer to Thrive. If the Godot
 engine ever changes how their build output is structured this also
 needs changing. The base path is:
-`.mono\temp\bin\ExportRelease\Thrive.dll`
+`.godot\mono\temp\bin\Debug\Thrive.dll`
 
 Note: Windows path separator used as that's what's in `.csproj` files.

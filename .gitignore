@@ -1,5 +1,6 @@
 # Godot files
 .import
+.godot
 builds
 
 # Godot-Mono-specific ignores

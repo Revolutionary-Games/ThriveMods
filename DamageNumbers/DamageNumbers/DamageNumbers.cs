@@ -1,9 +1,12 @@
+using Arch.Core;
+using Arch.Core.Extensions;
+using Components;
 using Godot;
 
 /// <summary>
 ///   Main class of the mod
 /// </summary>
-public class DamageNumbers : IMod
+public partial class DamageNumbers : IMod
 {
     private FloatingDamageNumbers damageNumbers;
 
@@ -24,7 +27,7 @@ public class DamageNumbers : IMod
         // Store the mod interface for use later
         storedInterface = modInterface;
 
-        // Setup our GUI control
+        // Set up our GUI control
         damageNumbers = new FloatingDamageNumbers();
 
         // Subscribe to the events we are interested in
@@ -58,14 +61,14 @@ public class DamageNumbers : IMod
     }
 
     /// <summary>
-    ///   Called once initial node setup has finished and it is possible to add children to the root node
+    ///   Called once initial node setup has finished, and it is possible to add children to the root node
     /// </summary>
     /// <param name="currentScene">
     ///   The scene we want might want to attach to, could also get these from the mod interface
     /// </param>
     /// <remarks>
     ///   <para>
-    ///     As this mod wants to be always active we directly attach to the scene tree root to stay attached even when
+    ///     As this mod wants to be always active, we directly attach to the scene tree root to stay attached even when
     ///     game scenes are changed.
     ///   </para>
     /// </remarks>
@@ -76,9 +79,12 @@ public class DamageNumbers : IMod
         currentScene.GetTree().Root.AddChild(damageNumbers);
     }
 
-    private void OnDamageReceived(Node damageReceiver, float amount, bool isPlayer)
+    private void OnDamageReceived(Entity damageReceiver, float amount, string source, bool isPlayer)
     {
-        if (damageReceiver is Spatial spatial)
-            damageNumbers.AddNumber(amount, spatial.GlobalTransform.origin);
+        if (damageReceiver != default && damageReceiver.IsAliveAndHas<WorldPosition>())
+        {
+            // Callback is multithreaded, so we need to queue the operation
+            damageNumbers.QueueAddNumber(amount, damageReceiver.Get<WorldPosition>().Position);
+        }
     }
 }

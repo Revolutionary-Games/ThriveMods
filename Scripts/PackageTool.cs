@@ -1,3 +1,5 @@
+using SharedBase.Models;
+
 namespace Scripts;
 
 using System;
@@ -16,7 +18,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
     /// <summary>
     ///   Needs to match what Godot uses
     /// </summary>
-    private const string DOTNET_RUNTIME_VERSION = "net472";
+    private const string DOTNET_RUNTIME_VERSION = "net9.0";
 
     private const string DOTNET_BUILD_MODE = "Release";
 
@@ -81,7 +83,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
 
         await CreateDynamicallyGeneratedFiles(cancellationToken);
 
-        // Add the license files first to the zip (this makes the -u flag running commands later not complain)
+        // Add the licence files first to the zip (this makes the -u flag running commands later not complain)
         if (!await CreateBaseZipStructure(cancellationToken))
         {
             ColourConsole.WriteErrorLine("Initial zip creation failed. Is the 'zip' command available in PATH?");
@@ -248,7 +250,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
 
     private string ExportedDllPath()
     {
-        return $"{currentlyProcessedMod}/.mono/temp/bin/ExportRelease/{DllNameForMod()}";
+        return $"{currentlyProcessedMod}/.godot/mono/temp/bin/ExportRelease/linux-x64/{DllNameForMod()}";
     }
 
     private string DotnetBuiltDllPath()
@@ -277,8 +279,8 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         {
             WorkingDirectory = sourceFolder,
         };
-        startInfo.ArgumentList.Add("--no-window");
-        startInfo.ArgumentList.Add("--export");
+        startInfo.ArgumentList.Add("--headless");
+        startInfo.ArgumentList.Add("--export-release");
         startInfo.ArgumentList.Add(target);
         startInfo.ArgumentList.Add(Path.GetFullPath(targetFile));
 

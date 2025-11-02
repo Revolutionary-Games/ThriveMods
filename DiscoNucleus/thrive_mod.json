@@ -2,13 +2,13 @@
     "Name": "Disco Nucleus",
     "InternalName": "DiscoNucleus",
     "Author": "Revolutionary Games Studio",
-    "Version": "1.1",
+    "Version": "1.2",
     "Description": "Example mod showing asset overriding",
     "Icon": "disco_icon.png",
     "InfoUrl": "https://github.com/Revolutionary-Games/ThriveMods",
     "License": "MIT",
-    "RecommendedThriveVersion": "0.5.6.0",
-    "MinimumThriveVersion": "0.5.6.0-alpha",
+    "RecommendedThriveVersion": "0.9.0.0",
+    "MinimumThriveVersion": "0.9.0.0",
     "PckToLoad": "DiscoNucleus.pck",
     "RequiresRestart": true
 }

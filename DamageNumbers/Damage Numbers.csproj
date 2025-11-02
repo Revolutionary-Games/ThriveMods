@@ -1,12 +1,15 @@
-<Project Sdk="Godot.NET.Sdk/3.3.0">
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <RootNamespace>DamageNumbers</RootNamespace>
-    <LangVersion>9.0</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Thrive">
-      <HintPath>..\..\Thrive\.mono\temp\bin\ExportRelease\Thrive.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+<Project Sdk="Godot.NET.Sdk/4.5.0">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>DamageNumbers</RootNamespace>
+        <LangVersion>10.0</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="Thrive">
+            <HintPath>..\..\Thrive\.godot\mono\temp\bin\Debug\Thrive.dll</HintPath>
+        </Reference>
+        <Reference Include="Arch">
+            <HintPath>..\..\Thrive\.godot\mono\temp\bin\Debug\Arch.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 </Project>

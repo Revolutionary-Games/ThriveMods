@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -13,17 +14,19 @@ using Godot;
 ///     Specifically from here: https://github.com/godotengine/godot-demo-projects/blob/master/3d/waypoints/waypoint.gd
 ///   </para>
 /// </remarks>
-public class FloatingDamageNumbers : Control
+public partial class FloatingDamageNumbers : Control
 {
     private const float NumberLifespan = 1.5f;
 
     private static readonly Vector3 NumberVelocity = new(0, 10.0f, -0.5f);
     private static readonly Vector3 VelocityRandomNess = new(0.05f, 5.0f, -1.0f);
 
+    private readonly ConcurrentQueue<(float Damage, Vector3 Position)> eventQueue = new();
+
     private readonly List<FloatingNumber> activeNumbers = new();
     private readonly Random random = new();
 
-    private Camera camera;
+    private Camera3D camera;
 
     public override void _Ready()
     {
@@ -36,14 +39,19 @@ public class FloatingDamageNumbers : Control
         // But don't block mouse input
         MouseFilter = MouseFilterEnum.Ignore;
 
-        // For more easily seeing this Node in the Godot debugger we give us a name (needs to be unique in the parent
+        // For more easily seeing this Node in the Godot debugger, we give us a name (needs to be unique in the parent
         // node we attach to)
         Name = nameof(FloatingDamageNumbers);
     }
 
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
-        // When cameras are detached from the main scene they don't have Current set to false even if
+        while (eventQueue.TryDequeue(out var tuple))
+        {
+            AddNumber(tuple.Damage, tuple.Position);
+        }
+
+        // When cameras are detached from the main scene, they don't have Current set to false even if
         // they aren't active
         if (camera == null || !IsInstanceValid(camera) || (!camera.Current || !camera.IsInsideTree()))
         {
@@ -58,39 +66,39 @@ public class FloatingDamageNumbers : Control
         }
 
         var cameraTransform = camera.GlobalTransform;
-        var cameraTranslation = cameraTransform.origin;
+        var cameraTranslation = cameraTransform.Origin;
 
-        // If we wanted to constraint the labels to the screen area we would need this variable
+        // If we wanted to constraint the labels to the screen area, we would need this variable
         // var screenArea = GetViewport().GetVisibleRect();
 
         foreach (var number in activeNumbers)
         {
             number.LifespanRemaining -= delta;
-            number.CurrentPosition += number.Velocity * delta;
+            number.CurrentPosition += number.Velocity * (float)delta;
 
             var numberTranslation = number.CurrentPosition;
 
-            bool isBehindCamera = cameraTransform.basis.z.Dot(numberTranslation - cameraTranslation) > 0;
+            bool isBehindCamera = cameraTransform.Basis.Z.Dot(numberTranslation - cameraTranslation) > 0;
 
-            // Fade if close to camera
+            // Fade if close to the camera
             var distance = cameraTranslation.DistanceTo(numberTranslation);
 
-            float alpha = Mathf.Clamp(RangeLerp(distance, 0, 2, 0, 1), 0, 1);
+            float alpha = Mathf.Clamp(Remap(distance, 0, 2, 0, 1), 0, 1);
 
             // TODO: make it not start to fade immediately
-            alpha = Mathf.Min(alpha, number.LifespanRemaining / number.TotalLifespan);
+            alpha = (float)Math.Min(alpha, number.LifespanRemaining / number.TotalLifespan);
 
             var unprojectedPosition = camera.UnprojectPosition(numberTranslation);
 
-            // In the example project there's some fancy logic for keeping stuff on-screen edges if it would otherwise
-            // go off-screen
+            // In the example project there's some fancy logic for keeping stuff on-screen edges if it otherwise
+            // goes off-screen
             if (isBehindCamera)
             {
                 number.AssociatedLabel.Visible = false;
             }
             else
             {
-                number.AssociatedLabel.RectPosition = unprojectedPosition;
+                number.AssociatedLabel.Position = unprojectedPosition;
                 number.AssociatedLabel.Visible = true;
                 number.AssociatedLabel.SelfModulate = new Color(1, 1, 1, alpha);
             }
@@ -105,9 +113,14 @@ public class FloatingDamageNumbers : Control
         }
     }
 
+    public void QueueAddNumber(float damage, Vector3 position)
+    {
+        eventQueue.Enqueue((damage, position));
+    }
+
     public void AddNumber(float damage, Vector3 position)
     {
-        var label = new Label()
+        var label = new Label
         {
             Text = Math.Round(damage, 1).ToString(CultureInfo.CurrentCulture),
         };
@@ -133,22 +146,22 @@ public class FloatingDamageNumbers : Control
     ///   https://godotengine.org/qa/91310/where-is-range_lerp-in-c%23 by AlexTheRegent
     ///   Modified to conform to naming style.
     /// </summary>
-    private static float RangeLerp(float value, float iStart, float iStop, float oStart, float oStop)
+    private static float Remap(float value, float iStart, float iStop, float oStart, float oStop)
     {
         return oStart + (oStop - oStart) * value / (iStop - iStart);
     }
 
     private void TryGetCamera()
     {
-        camera = GetViewport().GetCamera();
+        camera = GetViewport().GetCamera3D();
     }
 
     private class FloatingNumber
     {
         public Vector3 CurrentPosition;
         public Vector3 Velocity;
-        public float LifespanRemaining;
-        public float TotalLifespan;
+        public double LifespanRemaining;
+        public double TotalLifespan;
 
         public Label AssociatedLabel;
     }
