@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using HarmonyLib;
@@ -22,6 +23,13 @@ internal class RandomPartCellEditorPatch
 
     private static void Postfix(CellEditorComponent __instance)
     {
+        // Don't do anything in multicellular mode
+        if (__instance.IsMulticellularEditor)
+        {
+            GD.Print("Not adding random part in multicellular editor");
+            return;
+        }
+
         var random = new Random();
 
         var nucleus = SimulationParameters.Instance.GetOrganelleType("nucleus");
@@ -44,6 +52,9 @@ internal class RandomPartCellEditorPatch
         var rotationsToTry = Enumerable.Range(0, 6).OrderBy(_ => random.Next()).ToList();
 
         PerformingAutomaticAdd = true;
+
+        var workMemory1 = new List<Hex>();
+        var workMemory2 = new List<Hex>();
 
         // Select a random valid organelle type to add
         // TODO: for easier mode could make the nucleus much less likely or require the resulting stationary ATP
@@ -81,14 +92,14 @@ internal class RandomPartCellEditorPatch
                             var template = new OrganelleTemplate(organelleDefinition, new Hex(actualQ, actualR),
                                 rotation);
 
-                            if (!organelles.CanPlaceAndIsTouching(template))
+                            if (!organelles.CanPlaceAndIsTouching(template, workMemory1, workMemory2))
                                 continue;
 
                             var placed = CreatePlaceActionIfPossible(__instance, template);
 
                             if (placed != null && EnqueueAction(__instance, new CombinedEditorAction(placed)))
                             {
-                                GD.Print("Hope you like your new random ", organelleDefinition.InternalName);
+                                GD.Print("Hope you like your new random ", organelleDefinition.Name);
                                 PerformingAutomaticAdd = false;
                                 return;
                             }
@@ -113,7 +124,7 @@ internal class RandomPartCellEditorPatch
 
     [HarmonyReversePatch]
     [HarmonyPatch(
-        typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate>),
+        typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate, CellType>),
         "EnqueueAction", typeof(CombinedEditorAction))]
     private static bool EnqueueAction(object instance, CombinedEditorAction action)
     {
@@ -176,7 +187,7 @@ internal class RandomPartEditorBasePatch
     }
 }
 
-[HarmonyPatch(typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate>))]
+[HarmonyPatch(typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate, CellType>))]
 internal class RandomPartHexEditorComponentBasePatch
 {
     [HarmonyPrefix]

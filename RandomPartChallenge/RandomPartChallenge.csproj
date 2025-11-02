@@ -6,7 +6,13 @@
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="Thrive">
-            <HintPath>..\..\..\Thrive\.godot\mono\temp\bin\Debug\Thrive.dll</HintPath>
+            <HintPath>..\..\Thrive\.godot\mono\temp\bin\Debug\Thrive.dll</HintPath>
+        </Reference>
+        <Reference Include="SharedBase">
+            <HintPath>..\..\Thrive\.godot\mono\temp\bin\Debug\SharedBase.dll</HintPath>
+        </Reference>
+        <Reference Include="ThriveScriptsShared">
+            <HintPath>..\..\Thrive\.godot\mono\temp\bin\Debug\ThriveScriptsShared.dll</HintPath>
         </Reference>
     </ItemGroup>
     <ItemGroup>
