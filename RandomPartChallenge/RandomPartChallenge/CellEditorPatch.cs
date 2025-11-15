@@ -11,7 +11,7 @@ internal class RandomPartCellEditorPatch
     private const int MaxDistance = 1000;
 
     /// <summary>
-    ///   We need to know when we need to prevent further organelle placing as our random organelle add now depends
+    ///   We need to know when we need to prevent further organelle placing as our random organelle adding now depends
     ///   on the organelle placing check passing
     /// </summary>
     internal static bool PerformingAutomaticAdd;
@@ -24,7 +24,7 @@ internal class RandomPartCellEditorPatch
     private static void Postfix(CellEditorComponent __instance)
     {
         // Don't do anything in multicellular mode
-        if (__instance.IsMulticellularEditor)
+        if (__instance.IsMulticellularEditor || __instance.IsMacroscopicEditor)
         {
             GD.Print("Not adding random part in multicellular editor");
             return;
