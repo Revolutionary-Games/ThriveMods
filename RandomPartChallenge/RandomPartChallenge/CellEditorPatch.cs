@@ -21,10 +21,15 @@ internal class RandomPartCellEditorPatch
             AccessTools.FieldRefAccess<CellEditorComponent, OrganelleLayout<OrganelleTemplate>>(
                 "editedMicrobeOrganelles");
 
+    public static bool IsDisabledForEditor(CellEditorComponent editorComponent)
+    {
+        return editorComponent.IsMulticellularEditor || editorComponent.IsMacroscopicEditor;
+    }
+
     private static void Postfix(CellEditorComponent __instance)
     {
         // Don't do anything in multicellular mode
-        if (__instance.IsMulticellularEditor || __instance.IsMacroscopicEditor)
+        if (IsDisabledForEditor(__instance))
         {
             GD.Print("Not adding random part in multicellular editor");
             return;
@@ -124,7 +129,8 @@ internal class RandomPartCellEditorPatch
 
     [HarmonyReversePatch]
     [HarmonyPatch(
-        typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate, CellType>),
+        typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate,
+            CellType>),
         "EnqueueAction", typeof(CombinedEditorAction))]
     private static bool EnqueueAction(object instance, CombinedEditorAction action)
     {
@@ -141,8 +147,11 @@ internal class RandomPartCellEditorDisableThingsPatch
 {
     [HarmonyPrefix]
     [HarmonyPatch("IsValidPlacement")]
-    private static bool Prefix1(ref bool __result)
+    private static bool Prefix1(CellEditorComponent __instance, ref bool __result)
     {
+        if (RandomPartCellEditorPatch.IsDisabledForEditor(__instance))
+            return true;
+
         if (RandomPartCellEditorPatch.PerformingAutomaticAdd)
         {
             GD.Print("Allowing normal placement logic to check position");
@@ -155,15 +164,21 @@ internal class RandomPartCellEditorDisableThingsPatch
 
     [HarmonyPrefix]
     [HarmonyPatch(nameof(CellEditorComponent.ShowOrganelleOptions))]
-    private static bool Prefix2()
+    private static bool Prefix2(CellEditorComponent __instance)
     {
+        if (RandomPartCellEditorPatch.IsDisabledForEditor(__instance))
+            return true;
+
         return false;
     }
 
     [HarmonyPrefix]
     [HarmonyPatch("TryCreateRemoveHexAtAction")]
-    private static bool Prefix3(ref EditorAction? __result)
+    private static bool Prefix3(CellEditorComponent __instance, ref EditorAction? __result)
     {
+        if (RandomPartCellEditorPatch.IsDisabledForEditor(__instance))
+            return true;
+
         __result = null;
         return false;
     }
@@ -174,26 +189,36 @@ internal class RandomPartEditorBasePatch
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MicrobeEditor.Undo))]
-    private static bool Prefix1()
+    private static bool Prefix1(object __instance)
     {
-        return false;
+        if (__instance is MicrobeEditor)
+            return false;
+
+        return true;
     }
 
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MicrobeEditor.Redo))]
-    private static bool Prefix2()
+    private static bool Prefix2(object __instance)
     {
-        return false;
+        if (__instance is MicrobeEditor)
+            return false;
+
+        return true;
     }
 }
 
-[HarmonyPatch(typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate, CellType>))]
+[HarmonyPatch(
+    typeof(HexEditorComponentBase<ICellEditorData, CombinedEditorAction, EditorAction, OrganelleTemplate, CellType>))]
 internal class RandomPartHexEditorComponentBasePatch
 {
     [HarmonyPrefix]
     [HarmonyPatch(nameof(CellEditorComponent.StartHexMove))]
-    private static bool Prefix1()
+    private static bool Prefix1(object __instance)
     {
-        return false;
+        if (__instance is MicrobeEditor)
+            return false;
+
+        return true;
     }
 }
