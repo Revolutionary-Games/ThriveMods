@@ -12,5 +12,5 @@
     "MinimumThriveVersion": "0.9.1.0",
     "MaximumThriveVersion": "",
     "ModAssembly": "CellAutopilot.dll",
-    "UseAutoHarmony": true
+    "AssemblyModClass": "CellAutopilot.CellAutopilot"
 }

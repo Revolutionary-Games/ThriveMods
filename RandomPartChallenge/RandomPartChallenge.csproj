@@ -15,7 +15,8 @@
             <HintPath>..\..\Thrive\.godot\mono\temp\bin\Debug\ThriveScriptsShared.dll</HintPath>
         </Reference>
     </ItemGroup>
+
     <ItemGroup>
-        <PackageReference Include="Lib.Harmony" Version="2.4.1"/>
+        <PackageReference Include="Lib.Harmony" Version="2.4.2"/>
     </ItemGroup>
 </Project>

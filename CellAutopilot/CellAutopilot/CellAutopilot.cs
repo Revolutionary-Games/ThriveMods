@@ -1,16 +1,21 @@
-﻿using System;
+using System;
 using Godot;
 using HarmonyLib;
 
-public class RandomPartChallenge : IMod
+namespace CellAutopilot;
+
+/// <summary>
+///   Harmony patcher boilerplate for this mod
+/// </summary>
+public class CellAutopilot : IMod
 {
-    private const string OurHarmonyId = "com.revolutionarygamesstudio.thrive.mod.randomPartChallenge";
+    private const string OurHarmonyId = $"com.revolutionarygamesstudio.thrive.mod.{nameof(CellAutopilot)}";
 
     private Harmony? harmony;
 
     public bool Initialize(IModInterface modInterface, ModInfo currentModInfo)
     {
-        GD.Print("Patching with Harmony for RandomPartChallenge");
+        GD.Print($"Patching with Harmony for {GetType().Name}");
 
         try
         {
@@ -29,7 +34,7 @@ public class RandomPartChallenge : IMod
     {
         if (harmony != null)
         {
-            GD.Print("Un-patching changes of RandomPartChallenge");
+            GD.Print($"Un-patching changes of {GetType().Name}");
 
             try
             {
