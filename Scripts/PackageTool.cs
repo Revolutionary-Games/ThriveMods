@@ -15,13 +15,6 @@ using SharedBase.Utilities;
 
 public class PackageTool : PackageToolBase<Program.PackageOptions>
 {
-    /// <summary>
-    ///   Needs to match what Godot uses
-    /// </summary>
-    private const string DOTNET_RUNTIME_VERSION = "net9.0";
-
-    private const string DOTNET_BUILD_MODE = "Release";
-
     private const string MOD_INFO_FILE = "thrive_mod.json";
 
     private static readonly IReadOnlyList<PackagePlatform> ModPlatforms = new List<PackagePlatform>
@@ -117,6 +110,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         return currentlyProcessedMod.ToString();
     }
 
+
     protected override string GetCompressedExtensionForPlatform(PackagePlatform platform)
     {
         return ".zip";
@@ -132,7 +126,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         switch (currentlyProcessedMod)
         {
             case OfficialMod.CellAutopilot:
-                if (!await ExportWithDotnet(folder, cancellationToken))
+                if (!await ExportWithDotnet("CellAutopilot/CellAutopilot.csproj", folder, cancellationToken))
                     return false;
 
                 break;
@@ -140,8 +134,17 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
             case OfficialMod.DiscoNucleus:
             case OfficialMod.RandomPartChallenge:
             {
+                bool harmony = true;
+                bool hasDll = true;
+
+                if (currentlyProcessedMod == OfficialMod.DamageNumbers)
+                    harmony = false;
+
+                if (currentlyProcessedMod == OfficialMod.DiscoNucleus)
+                    hasDll = false;
+
                 if (!await ExportWithGodot(platform, currentlyProcessedMod.ToString(), folder,
-                        currentlyProcessedMod != OfficialMod.DiscoNucleus, cancellationToken))
+                        hasDll, harmony, cancellationToken))
                 {
                     return false;
                 }
@@ -214,11 +217,22 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         return GetFilesToPackageForMod();
     }
 
+    private string GetProjectNameForExport()
+    {
+        switch (currentlyProcessedMod)
+        {
+            case OfficialMod.DamageNumbers:
+                return "Damage Numbers";
+        }
+
+        return currentlyProcessedMod.ToString();
+    }
+
     private string GodotTargetFromPlatform(PackagePlatform platform)
     {
         switch (platform)
         {
-            // Mods are cross-platform so just this is needed
+            // Mods are cross-platform, so just this is needed
             case PackagePlatform.Linux:
                 return "Linux/X11";
             default:
@@ -248,19 +262,35 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         }
     }
 
-    private string ExportedDllPath()
+    private string ExportedDllPath(string baseFolder)
     {
-        return $"{currentlyProcessedMod}/.godot/mono/temp/bin/ExportRelease/linux-x64/{DllNameForMod()}";
+        return Path.Join(baseFolder, $"data_{GetProjectNameForExport()}_linuxbsd_x86_64/{DllNameForMod()}");
     }
 
-    private string DotnetBuiltDllPath()
+    private string DotnetPublishDllPath(string basePath)
     {
-        var mod = currentlyProcessedMod;
-        return $"{mod}/{mod}/bin/Release/{DOTNET_RUNTIME_VERSION}/{DllNameForMod()}";
+        return Path.Join(basePath, DllNameForMod());
+    }
+
+    private void CopyHarmonyIfExists(string source, string target)
+    {
+        foreach (var name in new[]
+                 {
+                     "0Harmony.dll", "Mono.Cecil.dll", "MonoMod.Utils.dll", "MonoMod.Backports.dll",
+                     "MonoMod.ILHelpers.dll",
+                 })
+        {
+            var path = Path.Join(source, name);
+            if (File.Exists(path))
+            {
+                ColourConsole.WriteDebugLine($"Copying Harmony library: {path}");
+                CopyHelpers.CopyToFolder(path, target);
+            }
+        }
     }
 
     private async Task<bool> ExportWithGodot(PackagePlatform platform, string sourceFolder, string targetFolder,
-        bool copyDll, CancellationToken cancellationToken)
+        bool copyDll, bool copyHarmony, CancellationToken cancellationToken)
     {
         var target = GodotTargetFromPlatform(platform);
 
@@ -294,7 +324,15 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
 
         if (copyDll)
         {
-            CopyHelpers.CopyToFolder(ExportedDllPath(), targetFolder);
+            CopyHelpers.CopyToFolder(ExportedDllPath(tempFolder), targetFolder);
+        }
+
+        // For some reason harmony leaks even into builds that don't reference it so we need this explicit control flag
+        if (copyHarmony)
+        {
+            CopyHarmonyIfExists(
+                Path.GetDirectoryName(ExportedDllPath(tempFolder)) ??
+                throw new Exception("Couldn't get export DLL temp folder"), targetFolder);
         }
 
         foreach (var file in GetFilesToCopyInGodotPackage())
@@ -307,7 +345,7 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         return true;
     }
 
-    private async Task<bool> ExportWithDotnet(string folder, CancellationToken cancellationToken)
+    private async Task<bool> ExportWithDotnet(string projectFile, string folder, CancellationToken cancellationToken)
     {
         ColourConsole.WriteNormalLine("Exporting with dotnet");
 
@@ -315,22 +353,33 @@ public class PackageTool : PackageToolBase<Program.PackageOptions>
         {
             WorkingDirectory = currentlyProcessedMod.ToString(),
         };
-        startInfo.ArgumentList.Add("build");
-        startInfo.ArgumentList.Add("-c");
-        startInfo.ArgumentList.Add(DOTNET_BUILD_MODE);
-        startInfo.ArgumentList.Add("/t:Clean,Build");
+        startInfo.ArgumentList.Add("publish");
+        startInfo.ArgumentList.Add(projectFile);
+
+        var tempFolder = Path.Join(folder, "publish_temp");
+
+        startInfo.ArgumentList.Add("-o");
+        startInfo.ArgumentList.Add(Path.GetFullPath(tempFolder));
+
+        Directory.CreateDirectory(tempFolder);
 
         var result = await ProcessRunHelpers.RunProcessAsync(startInfo, cancellationToken, false);
 
         if (result.ExitCode != 0)
         {
-            ColourConsole.WriteWarningLine("Dotnet build failed");
+            ColourConsole.WriteWarningLine("Dotnet publish failed");
             return false;
         }
 
-        CopyHelpers.CopyToFolder(DotnetBuiltDllPath(), folder);
+        CopyHelpers.CopyToFolder(DotnetPublishDllPath(tempFolder), folder);
 
-        ColourConsole.WriteSuccessLine("Dotnet build succeeded");
+        CopyHarmonyIfExists(
+            Path.GetDirectoryName(DotnetPublishDllPath(tempFolder)) ??
+            throw new Exception("Couldn't get publish folder"), folder);
+
+        Directory.Delete(tempFolder, true);
+
+        ColourConsole.WriteSuccessLine("Dotnet publish succeeded");
         return true;
     }
 
